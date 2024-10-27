@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyzed Posts</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .post-container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .post-title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .navigation {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Analyzed Posts</h1>
+
+<form action="/post" method="GET">
+    <label for="post_id">Enter Post ID:</label>
+    <input type="number" id="post_id" name="post_id" required>
+    <button type="submit">Load Post</button>
+</form>
+
+
+    <!-- Navigation Buttons -->
+    <div class="navigation">
+        <button onclick="location.href='/'">Go to Current Post</button>
+        <button onclick="location.href='/rejected'">View Rejected Posts</button>
+        <button onclick="location.href='/export'">Export Analyzed Posts</button>
+    </div>
+    <!-- Form to select a month to analyze -->
+<form action="/analyze_by_month" method="GET">
+    <label for="month">Select Month to Analyze:</label>
+    <select name="month" id="month">
+        {% for month in months_with_posts %}
+        {# Check if the month has been analyzed #}
+        {% set analyzed_count = (analyzed_counts | selectattr('month', 'equalto', month.month) | first).count if analyzed_counts | selectattr('month', 'equalto', month.month) | list else 0 %}
+        <option value="{{ month.month }}">{{ month.month }} ({{ analyzed_count }} analyzed)</option>
+        {% endfor %}
+    </select>
+    <button type="submit">Analyze</button>
+</form>
+
+
+    <!-- Analyzed Posts List -->
+    <div>
+        {% for post in analyzed_posts %}
+        <div class="post-container">
+            <div class="post-title"><a href="./post/{{ post.id }}">#{{ post.id }} - {{ post.title }}</a></div>
+        </div>
+        {% else %}
+        <p>No analyzed posts to display.</p>
+        {% endfor %}
+    </div>
+</body>
+</html>

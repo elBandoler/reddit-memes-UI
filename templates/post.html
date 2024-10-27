@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post Analysis</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+		overflow:hidden;
+        }
+        h1, h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .left-column {
+            flex: 0 1 50%;
+        }
+        .right-column {
+            flex: 0 1 45%;
+            border-left: 1px solid #ddd;
+            padding-left: 20px;
+	    margin-left: -10px;
+            font-size: 12px;
+        }
+        .post-container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .post-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .post-url {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 10px;
+        }
+        .post-image {
+            margin: 15px 0;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            resize: vertical;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button.reject {
+            background-color: #f44336;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .tabs {
+	    font-size: 10px;
+            margin-bottom: 20px;
+        }
+        .tabs a {
+            margin-right: 10px;
+            padding: 10px;
+            text-decoration: none;
+            background-color: #ddd;
+            color: black;
+            border-radius: 5px;
+        }
+        .tabs a:hover {
+            background-color: #bbb;
+        }
+        .remember-section {
+            margin-bottom: 20px;
+        }
+        .remember-section li {
+            margin-bottom: 10px;
+        }
+    </style>
+    <script>
+        function handleReject() {
+            // Set the action field to 'reject' before submitting
+            const actionInput = document.createElement('input');
+            actionInput.setAttribute('type', 'hidden');
+            actionInput.setAttribute('name', 'action');
+            actionInput.setAttribute('value', 'reject');
+
+            const form = document.querySelector('form');
+            form.appendChild(actionInput);
+            form.noValidate = true; // Disable form validation
+            form.submit(); // Submit the form
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="left-column">
+            <div class="post-container">
+                <div class="post-title">{{ post.title }}</div>
+                <div class="post-url">Credit: <a href="{{ post.url }}" target="_blank">{{ post.url }}</a></div>
+        	<div>Date: {{ post.date }} | Analyzed in this month: {{ analyzed_count }}</div>
+
+
+                {% if media %}
+                <div class="post-image">
+                    <img src="data:image/jpeg;base64,{{ media.data|safe }}" alt="Meme Image" style="max-height:700px; max-width:75%">
+                </div>
+                {% endif %}
+
+		<div>
+			{{ post.content }}
+		</div>
+            </div>
+        </div>
+
+        <div class="right-column">
+            <div class="remember-section">
+                <h2>Remember to deal with:</h2>
+                <ul>
+                    <li>Template (unique? evolved? related to another post? cultural source?)</li>
+                    <li>Texts (what are they? what messages they pass? are they in the template or edited or...?)</li>
+                    <li>Fonts (what font? what size? what shape? is it "funny", or "bloody", etc? what does it mean about stance? content?)</li>
+                    <li>Objects (what objects appear? what are they used for - signification or practical usage? emotions towards them?)</li>
+                    <li>Characters (mainly face. how do they appear? what does it mean about their emotional state? thoughts? etc.)</li>
+                    <li>Colors (what colors? where? do they change meanings? emphasize it? are they standard? what emotions are they meant to pass?)</li>
+                </ul>
+
+
+                <form action="/analyze" method="POST">
+                    <input type="hidden" name="post_id" value="{{ post.id }}">
+                    
+                    <label for="content">Content Analysis: (what are the main ideas and messages brought by the meme?)</label>
+                    <textarea name="content" placeholder="Write your content analysis..." dir="auto" required>{{ analysis.content if analysis else '' }}</textarea>
+
+                    <label for="form">Form Analysis: (what is the physical form of the meme?)</label>
+                    <textarea name="form" placeholder="Write your form analysis..."  dir="auto" required>{{ analysis.form if analysis else '' }}</textarea>
+
+                    <label for="stance">Stance Analysis: (what is the stance of the creator towards the content, the context and other speakers? what is the emotional framing? what media functionalities is it trying to pass through?)</label>
+                    <textarea name="stance" placeholder="Write your stance analysis..."  dir="auto" required>{{ analysis.stance if analysis else '' }}</textarea>
+
+                    <button type="submit" name="action" value="analyze">Analyze</button>
+                    <button type="button" name="action" value="reject" class="reject" onclick="handleReject()">Reject</button>
+    <!--div class="tabs"-->
+        <a href="/analyzed">Analyzed Posts</a>
+        <a href="/rejected">Rejected Posts</a>
+        <a href="/">Current Post</a>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

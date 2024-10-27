@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyzed Posts List</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        .group-badge {
+            padding: 5px 10px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .post-card {
+            background-color: #f9f9f9;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            width: calc(100% - 40px);  /* Width slightly smaller than the row */
+            margin-left: 20px;         /* Indent from the table */
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for visual appeal */
+            border-radius: 8px;        /* Rounded corners */
+        }
+
+        .post-card h4 {
+            font-size: 1.2rem;  /* Slightly larger title */
+            margin-bottom: 10px;
+        }
+
+        .post-card p {
+            font-size: 1rem;    /* Adjust text size for readability */
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        td {
+            vertical-align: middle;
+        }
+
+        .clickable-row {
+            cursor: pointer;
+        }
+
+        .post-details-row {
+            display: none;   /* Hidden by default */
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Analyzed Posts List</h1>
+
+        <!-- Filter Dropdown for Groups -->
+        <div class="mb-3">
+            <label for="groupFilter" class="form-label">Filter by Group:</label>
+            <select id="groupFilter" class="form-select" onchange="filterByGroup()">
+                <option value="all">All</option>
+                {% for group in groups %}
+                <option value="{{ group.post_group }}">{{ group.post_group }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Sort Buttons -->
+        <div class="mb-3">
+            <button class="btn btn-primary" onclick="sortPosts('asc')">Sort Ascending</button>
+            <button class="btn btn-secondary" onclick="sortPosts('desc')">Sort Descending</button>
+        </div>
+
+        <!-- Table for Posts -->
+        <table class="table table-striped" id="postTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Group</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for post in posts %}
+                <tr class="clickable-row" data-group="{{ post.post_group }}" onclick="togglePostDetails({{ post.id }})">
+                    <td>{{ post.id }}</td>
+                    <td>{{ post.title }}</td>
+                    <td>
+                        <span class="group-badge" style="background-color: {{ group_colors[post.post_group] }};">
+                            {{ post.post_group }}
+                        </span>
+                    </td>
+                </tr>
+                <tr id="post-details-{{ post.id }}" class="post-details-row">
+                    <td colspan="3">
+                        <div class="post-card">
+                            <h4>{{ post.title }}</h4>
+                            <p><strong>Content Analysis:</strong> {{ post.analysis_content }}</p>
+                            <p><strong>Form Analysis:</strong> {{ post.form_analysis }}</p>
+                            <p><strong>Stance Analysis:</strong> {{ post.stance_analysis }}</p>
+                            {% if post.media_data %}
+                            <img src="data:image/jpeg;base64,{{ post.media_data|safe }}" alt="Meme Image" style="max-width: 100%;">
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Function to toggle the display of post details
+        function togglePostDetails(postId) {
+            var row = document.getElementById('post-details-' + postId);
+            if (row.style.display === "none" || row.style.display === "") {
+                row.style.display = "table-row";
+            } else {
+                row.style.display = "none";
+            }
+        }
+
+        // Function to filter posts by group
+        function filterByGroup() {
+            var selectedGroup = document.getElementById('groupFilter').value;
+            var rows = document.querySelectorAll('#postTable tbody tr[data-group]');
+
+            rows.forEach(function(row) {
+                var group = row.getAttribute('data-group');
+                var postId = row.querySelector('td:first-child').textContent;
+
+                if (selectedGroup === 'all' || group === selectedGroup) {
+                    row.style.display = '';
+                    document.getElementById('post-details-' + postId).style.display = 'none';  // Close card when filtering
+                } else {
+                    row.style.display = 'none';
+                    document.getElementById('post-details-' + postId).style.display = 'none';  // Ensure it's closed if filtered out
+                }
+            });
+        }
+
+        // Function to sort posts by group
+        function sortPosts(order) {
+            var table = document.getElementById('postTable').getElementsByTagName('tbody')[0];
+            var rows = Array.from(table.getElementsByTagName('tr')).filter(row => row.getAttribute('data-group'));
+
+            rows.sort(function(a, b) {
+                var groupA = a.getAttribute('data-group').toLowerCase();
+                var groupB = b.getAttribute('data-group').toLowerCase();
+
+                if (order === 'asc') {
+                    return groupA < groupB ? -1 : (groupA > groupB ? 1 : 0);
+                } else {
+                    return groupA > groupB ? -1 : (groupA < groupB ? 1 : 0);
+                }
+            });
+
+            // Re-append rows in sorted order
+            rows.forEach(function(row) {
+                table.appendChild(row);
+            });
+        }
+    </script>
+</body>
+</html>

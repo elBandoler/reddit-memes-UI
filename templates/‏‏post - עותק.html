@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post Analysis</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .post-container {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .post-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .post-url {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 10px;
+        }
+        .post-image {
+            margin: 15px 0;
+        }
+        textarea {
+            width: 100%;
+            height: 50px;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            resize: vertical;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button.reject {
+            background-color: #f44336;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .tabs {
+            margin-bottom: 20px;
+        }
+        .tabs a {
+            margin-right: 10px;
+            padding: 10px;
+            text-decoration: none;
+            background-color: #ddd;
+            color: black;
+            border-radius: 5px;
+        }
+        .tabs a:hover {
+            background-color: #bbb;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Post Analysis</h1>
+
+        <h2>Analyzed Posts per Month:</h2>
+        <ul>
+            {% for row in analyzed_counts %}
+            <li>{{ row.month }}: {{ row.analyzed_count }} analyzed</li>
+            {% endfor %}
+        </ul>
+
+    <div class="tabs">
+        <a href="/analyzed">Analyzed Posts</a>
+        <a href="/rejected">Rejected Posts</a>
+        <a href="/">Current Post</a>
+    </div>
+
+<div style="float:right">
+		<h2>Remember to deal with:</h2>
+		<li>Template (unique? evolved? related to another post? cultural source?)</li>
+		<li>Texts (what are they? what messages they pass? are they in the template or edited or...?)</li>
+		<li>Fonts (what font? what size? what shape? is it "funny", or "bloody", etc? what does it mean about stance? content?)</li>
+		<li>Objects (what objects appear? what are they used for - signification or practical usage? emotions towards them?)</li>
+		<li>Characters (mainly face. how do they appear? what does it mean about their emotional state? thoughts? etc.)</li>
+		<li>Colors (what colors? where? do they change meanings? emphasize it? are they standard? what emotions are they meant to pass?</li>
+</div>
+
+    <div class="post-container">
+        <div class="post-title">{{ post.title }}</div>
+        <div class="post-url">Credit: <a href="{{ post.url }}" target="_blank">{{ post.url }}</a></div>
+
+        {% if media %}
+        <div class="post-image">
+            <img src="data:image/jpeg;base64,{{ media.data|safe }}" alt="Meme Image" style="max-height: 500px;">
+        </div>
+        {% endif %}
+
+        <form action="/analyze" method="POST">
+            <input type="hidden" name="post_id" value="{{ post.id }}">
+<br />
+
+<br>
+            <label for="content">Content Analysis: (what are the main ideas and messages brought by the meme?)</label>
+            <textarea name="content" placeholder="Write your content analysis..." required></textarea>
+
+            <label for="form">Form Analysis: (what is the physical form of the meme?)</label>
+            <textarea name="form" placeholder="Write your form analysis..." required></textarea>
+
+            <label for="stance">Stance Analysis: (what is the stance of the creator towards the content, the context and other speakers? what is the emotional framing? what media functionalities is it trying to pass through?</label>
+            <textarea name="stance" placeholder="Write your stance analysis..." required></textarea>
+
+            <button type="submit" name="action" value="analyze">Analyze</button>
+            <button type="submit" name="action" value="reject" class="reject">Reject</button>
+        </form>
+</div>
+</body>
+</html>

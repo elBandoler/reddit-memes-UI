@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kanban Board</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
+
+    <style>
+        .kanban-column {
+            border: 1px solid #ccc;
+            min-height: 400px;
+            padding: 10px;
+            margin-right: 10px;
+            background-color: #f7f7f7;
+        }
+        .post-card {
+            background-color: white;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            cursor: pointer;
+        }
+        .kanban-column-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+.accordion-item {
+    max-width: 600px;  /* Restrict the width */
+}
+
+.kanban-board {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;  /* Horizontal scroll for the entire Kanban board */
+    max-height: 600px;  /* Limit the height of the entire Kanban board */
+}
+
+.kanban-column {
+    border: 1px solid #ddd;
+    min-width: 250px;  /* Increased width for columns */
+    max-width: 250px;
+    background-color: #f9f9f9;
+    padding: 10px;
+    overflow-y: auto;  /* Enable vertical scrolling for columns */
+    max-height: 400px;  /* Limit the height for individual columns */
+}
+
+.new-column-placeholder {
+    border: 2px dashed #ccc;
+    min-width: 250px;
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f7f7f7;
+}
+
+.post-card {
+    background-color: white;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    max-width: 230px;  /* Adjusted to fit inside the new wider columns */
+}
+
+.accordion-body {
+    max-width: 230px;
+    word-wrap: break-word;
+}
+
+
+
+    </style>
+
+<script>
+    // Allow dragging
+    function allowDrop(ev) {
+        ev.preventDefault();  // Allow dropping by preventing the default behavior
+    }
+
+    // Handle the dragging event
+    function drag(ev) {
+        ev.dataTransfer.setData("text", ev.target.id);  // Store the post ID being dragged
+    }
+
+    // Handle the drop event in existing columns
+    function drop(ev) {
+        ev.preventDefault();
+        var postId = ev.dataTransfer.getData("text");
+
+        // Check if the drop target is a valid kanban column
+        if (ev.target.classList.contains('kanban-column')) {
+            ev.target.appendChild(document.getElementById(postId));  // Append the dragged post to the new column
+
+            // Get the new group (column ID) where the post was dropped
+            var newGroup = ev.target.id;
+
+            // Update the post's group in the database (using a POST request)
+            fetch(`/update_post_group/${postId.split('-')[1]}/${newGroup}`, { method: 'POST' });
+        }
+    }
+
+    // Handle the drop event in the empty space (create a new column)
+    function createNewKanban(ev) {
+        ev.preventDefault();
+        var postId = ev.dataTransfer.getData("text");
+
+        // Ask for a new group name, or provide a default
+        var newGroup = prompt('Enter the name for the new group:', 'New Group');
+        if (!newGroup) return;  // If no group name is provided, return
+
+        // Create a new Kanban column dynamically
+        var kanbanBoard = document.getElementById('kanbanBoard');
+        var newColumn = document.createElement('div');
+        newColumn.classList.add('kanban-column');
+        newColumn.setAttribute('id', newGroup);
+        newColumn.setAttribute('ondrop', 'drop(event)');
+        newColumn.setAttribute('ondragover', 'allowDrop(event)');
+        newColumn.innerHTML = `<div class="kanban-column-title">${newGroup}</div>`;
+
+        // Append the dragged post to the new column
+        var post = document.getElementById(postId);
+        newColumn.appendChild(post);
+
+        // Append the new column to the Kanban board
+        kanbanBoard.appendChild(newColumn);
+
+        // Update the post's group in the database (using a POST request)
+        fetch(`/update_post_group/${postId.split('-')[1]}/${newGroup}`, { method: 'POST' });
+    }
+
+    // Function to open the modal and load the post content dynamically
+    function openPostModal(postId) {
+        var modalBody = document.getElementById('postModalBody');
+        
+        // Fetch the post content (replace this with your server-side logic)
+        fetch(`/get_post_details/${postId}`)
+            .then(response => response.json())
+            .then(data => {
+                // Dynamically load post content into the modal
+               modalBody.innerHTML = `
+                    <h4>${data.title}</h4>
+                    <p>${data.content}</p>
+                    <p><strong>Content Analysis:</strong> ${data.analysis_content}</p>
+                    <p><strong>Form Analysis:</strong> ${data.form_analysis}</p>
+                    <p><strong>Stance Analysis:</strong> ${data.stance_analysis}</p>
+                    <img src="data:image/jpeg;base64,${data.media_data}" alt="Meme Image" style="max-width: 100%;">
+                `;	
+
+                // Initialize and show the modal
+                var postModal = new bootstrap.Modal(document.getElementById('postModal'), {
+                    keyboard: true
+                });
+                postModal.show();
+            })
+            .catch(error => console.error('Error loading post data:', error));
+    }
+</script>
+<!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Bootstrap JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+
+
+</head>
+<body>
+<div class="container mt-5">
+    <h1>Kanban Board</h1>
+    <div class="kanban-board" id="kanbanBoard" style="display: flex; overflow-x: auto; min-height: 400px; max-height: 600px;">
+        <!-- Loop through each group to create a Kanban column -->
+        {% for group in groups %}
+        <div class="kanban-column" id="{{ group.post_group }}" ondrop="drop(event)" ondragover="allowDrop(event)" style="overflow-y: auto; max-height: 400px;">
+            <div class="kanban-column-title">{{ group.post_group }}</div>
+
+            <!-- Loop through posts that belong to this group -->
+            {% for post in posts if post.post_group == group.post_group %}
+            <div class="post-card" id="post-{{ post.id }}" draggable="true" ondragstart="drag(event)" onclick="openPostModal({{ post.id }})">
+                <!-- Simplified card content, full content will be in the modal -->
+                Post ID: {{ post.id }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+        
+        <!-- Empty space for dropping and creating a new Kanban column -->
+        <div class="kanban-column new-column-placeholder" id="new-column-placeholder" ondrop="createNewKanban(event)" ondragover="allowDrop(event)" style="border: 2px dashed #ccc; min-width: 250px; min-height: 400px; display: flex; align-items: center; justify-content: center;">
+            <p>Drag here to create a new column</p>
+        </div>
+    </div>
+
+</div>
+
+    <!-- Modal for viewing detailed post content -->
+<div class="modal fade" id="postModal" tabindex="-1" aria-labelledby="postModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="postModalLabel">Post Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="postModalBody">
+                <!-- Post details will be loaded here dynamically -->
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
